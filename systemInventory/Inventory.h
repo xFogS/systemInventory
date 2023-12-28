@@ -27,7 +27,7 @@ public:
 	void _MenuMain();
 	void _mainFileItems();
 	void _SaveADDItems();
-	void _SaveDeleteItems();
+	void _SaveDeleteItems(size_t numValue);
 };
 
 void Inventory::_MenuMain()
@@ -59,7 +59,7 @@ void Inventory::_mainFileItems()
 	if (out.is_open())
 	{
 		size_t indx = 0;
-		auto idIterator = itemID.begin();
+		auto idIterator = itemID.begin() + 1;
 		for (auto items = item.begin() + 1; items != item.end(); items++)
 		{
 			out << '[' << indx << ']' << " Item : " << *items << endl;
@@ -83,13 +83,13 @@ void Inventory::_SaveADDItems()
 		out.close();
 	}
 }
-void Inventory::_SaveDeleteItems()
+void Inventory::_SaveDeleteItems(size_t numValue)
 {
 	ofstream out(delItemTXT, ios::app);
 	if (out.is_open())
 	{
-		for (auto delItem = item.begin() + 1; delItem != item.end(); delItem++)
-			out << '[' << __DATE__ << '|' << __TIME__ << ']'
+		auto delItem = item.begin() + numValue;
+		out << '[' << __DATE__ << '|' << __TIME__ << ']'
 			<< " Del Item :" << *delItem << endl;
 		cout << "File save" << endl;
 		out.close();
@@ -120,8 +120,8 @@ void Inventory::_AddNewItem()
 		system("cls");
 		//Є один лишній ввід ІД, вона не впливає, це так зміщення з 0 індексу
 		/*sort(item.begin(), item.end());*/
-		auto j = itemID.begin() + 1;
-		for (vector<string>::iterator i = item.begin() + 1; i != item.end(); i++)
+		auto j = itemID.begin();
+		for (vector<string>::iterator i = item.begin(); i != item.end(); i++)
 		{
 			cout << "Item: " << *i << endl;
 			cout << "ID: " << *j << endl;
@@ -137,30 +137,29 @@ void Inventory::_DeleteItem()
 {
 	if (item.empty())
 	{
-		cout << "Your inventory clear!" << endl; system("pause");
-		return;
+		cout << "Inventory is clear ";
+		SetColor(Red, 0); cout << "{^|^}" << endl; SetColor(LightGray, 0);
+		system("pause"); return;
 	}
 	system("cls");
 	_LoadFile(mainFile);
 	cout << "~~~~~~~~~~" << endl;
 	size_t input; cout << "Input index for delete: "; cin >> input;
-	auto i = item.begin() + input;
-	auto j = itemID.begin() + input;
-
-	if (*i == item.back())
+	//auto i = item.begin();
+	//auto j = itemID.begin();
+	auto _iDel = item.begin() + input;
+	auto _jDel = itemID.begin() + input;
+	if (_iDel != item.begin())
 	{
-		item.pop_back(); itemID.pop_back();
-		cout << "\nPop back++. Checked file!" << endl;
+		item.erase(_iDel), itemID.erase(_jDel);
+		_mainFileItems();
+		_SaveDeleteItems(input);
 	}
-	else if (input >= 0 && input <= item.size())
-	{
-		item.erase(i); itemID.erase(j);
-		cout << "\nPop position++. Checked file!" << endl;
+	else {
+		item.erase(_iDel); itemID.erase(_jDel);
+		_mainFileItems();
+		_SaveDeleteItems(input);
 	}
-	else
-		cout << "Not found index!" << endl;
-	_mainFileItems();
-	_SaveDeleteItems();
 }
 
 void Inventory::_PrintConsole() const
