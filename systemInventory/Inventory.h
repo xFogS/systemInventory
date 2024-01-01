@@ -27,7 +27,7 @@ public:
 	void _MenuMain();
 	void _mainFileItems();
 	void _SaveADDItems();
-	void _SaveDeleteItems(size_t numValue);
+	void _SaveDeleteItems(vector<string>::iterator i);
 };
 
 void Inventory::_MenuMain()
@@ -59,8 +59,8 @@ void Inventory::_mainFileItems()
 	if (out.is_open())
 	{
 		size_t indx = 0;
-		auto idIterator = itemID.begin() + 1;
-		for (auto items = item.begin() + 1; items != item.end(); items++)
+		auto idIterator = itemID.begin();
+		for (auto items = item.begin(); items != item.end(); items++)
 		{
 			out << '[' << indx << ']' << " Item : " << *items << endl;
 			out << '[' << indx << ']' << " ID   : " << *idIterator << endl; idIterator++;
@@ -76,21 +76,19 @@ void Inventory::_SaveADDItems()
 	ofstream out(addItemTXT, ios::app);
 	if (out.is_open())
 	{
-		for (auto addItem = item.begin() + 1; addItem != item.end(); addItem++)
+		for (auto addItem = item.begin(); addItem != item.end(); addItem++)
 			out << '[' << __DATE__ << '|' << __TIME__ << ']'
 			<< " New Item : " << *addItem << endl;
 		cout << "File save" << endl;
 		out.close();
 	}
 }
-void Inventory::_SaveDeleteItems(size_t numValue)
+void Inventory::_SaveDeleteItems(vector<string>::iterator i)
 {
 	ofstream out(delItemTXT, ios::app);
 	if (out.is_open())
 	{
-		auto delItem = item.begin() + numValue;
-		out << '[' << __DATE__ << '|' << __TIME__ << ']'
-			<< " Del Item :" << *delItem << endl;
+		out << '[' << __DATE__ << '|' << __TIME__ << ']' << " Del Item :" << *i << endl;
 		cout << "File save" << endl;
 		out.close();
 	}
@@ -101,35 +99,38 @@ void Inventory::_AddNewItem()
 	system("cls");
 	cout << "How much Items: "; cin >> size;
 	string newItem; size_t newID;
-	if (size <= maxItems)
+	if (size >= 1 && size <= maxItems && size != char())
 	{
-		for (size_t i = 0; i <= size; i++)
+		cin.ignore();
+		for (size_t i = 0; i < size; i++)
 		{
 			system("cls");
 			cout << '[' << i << "] Item: "; getline(cin, newItem);
 			item.push_back(newItem);
 		}
 
-		for (size_t i = 0; i <= size; i++)
+		for (size_t i = 0; i < size; i++)
 		{
 			system("cls");
-			cout << '[' << i << "] ID: "; cin >> newID;
+			cout << '[' << i << "] ID: "; cin >> newID; cin.ignore();
 			itemID.push_back(newID);
 		}
 
 		system("cls");
-		//Є один лишній ввід ІД, вона не впливає, це так зміщення з 0 індексу
-		/*sort(item.begin(), item.end());*/
 		auto j = itemID.begin();
-		for (vector<string>::iterator i = item.begin(); i != item.end(); i++)
+		for (vector<string>::iterator i = item.begin(); i != item.end(); i++, j++)
 		{
-			cout << "Item: " << *i << endl;
-			cout << "ID: " << *j << endl;
-			j++;
+			cout << "Item: " << *i << 
+				"\nID: " << *j << endl;
 		}
 		item.shrink_to_fit(); itemID.shrink_to_fit(); //clear free bufer
 		_mainFileItems();
 		_SaveADDItems();
+	}
+	else
+	{
+		SetColor(Red, 0); cout << "Error type or size.\Restart the Program!" << endl; SetColor(LightGray, 0);
+		exit(0);
 	}
 }
 
@@ -139,26 +140,23 @@ void Inventory::_DeleteItem()
 	{
 		cout << "Inventory is clear ";
 		SetColor(Red, 0); cout << "{^|^}" << endl; SetColor(LightGray, 0);
-		system("pause"); return;
+		return;
 	}
 	system("cls");
 	_LoadFile(mainFile);
 	cout << "~~~~~~~~~~" << endl;
-	size_t input; cout << "Input index for delete: "; cin >> input;
-	//auto i = item.begin();
-	//auto j = itemID.begin();
-	auto _iDel = item.begin() + input;
-	auto _jDel = itemID.begin() + input;
-	if (_iDel != item.begin())
+	size_t input; cout << "Input index to delete: "; cin >> input;
+	auto _iDel = item.begin();
+	auto _jDel = itemID.begin();
+	if (input >= 0 && input <= item.size())
 	{
-		item.erase(_iDel), itemID.erase(_jDel);
+		_SaveDeleteItems(_iDel + input);
+		item.erase(_iDel + input), itemID.erase(_jDel + input);
 		_mainFileItems();
-		_SaveDeleteItems(input);
 	}
 	else {
-		item.erase(_iDel); itemID.erase(_jDel);
-		_mainFileItems();
-		_SaveDeleteItems(input);
+		SetColor(Red, 0); cout << "Index has < min size or > max size: " << maxItems << endl; SetColor(LightGray, 0);
+		return;
 	}
 }
 
@@ -168,8 +166,8 @@ void Inventory::_PrintConsole() const
 	cout << "Max size Items = " << maxItems << endl;
 	if (!item.empty())
 	{
-		auto j = itemID.begin() + 1;
-		for (auto i = item.begin() + 1; i != item.end(); i++)
+		auto j = itemID.begin();
+		for (auto i = item.begin(); i != item.end(); i++, j++)
 		{
 			cout << "Item: " << *i <<
 				"\nID  : " << *j << endl;
@@ -190,9 +188,9 @@ void Inventory::_FilesPrint()
 		HorizontalAlignment::Left);
 	switch (input)
 	{
-	case 0: system("cls"); _LoadFile(mainFile); system("pause"); return;
-	case 1: system("cls"); _LoadFile(addItemTXT); system("pause"); return;
-	case 2: system("cls"); _LoadFile(delItemTXT); system("pause"); return;
+	case 0: system("cls"); _LoadFile(mainFile); return;
+	case 1: system("cls"); _LoadFile(addItemTXT); return;
+	case 2: system("cls"); _LoadFile(delItemTXT); return;
 	case 3: system("cls"); return;
 	}
 }
