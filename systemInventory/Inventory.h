@@ -17,11 +17,14 @@ class Inventory
 	string addItemTXT = "addItem.txt";
 	string delItemTXT = "delItems.txt";
 
+	
+
 	void _AddNewItem();
 	void _DeleteItem();
-	void _PrintConsole() const;
+	void _PrintConsole();
 	void _FilesPrint();
 	void _LoadFile(string File);
+	void loadWindow();
 public:
 	//start create main menu for user
 	void _MenuMain();
@@ -66,7 +69,7 @@ void Inventory::_mainFileItems()
 			out << '[' << indx << ']' << " ID   : " << *idIterator << endl; idIterator++;
 			indx++;
 		}
-		cout << "File save" << endl;
+		//cout << "File save" << endl;
 		out.close();
 	}
 }
@@ -79,7 +82,7 @@ void Inventory::_SaveADDItems()
 		for (auto addItem = item.begin(); addItem != item.end(); addItem++)
 			out << '[' << __DATE__ << '|' << __TIME__ << ']'
 			<< " New Item : " << *addItem << endl;
-		cout << "File save" << endl;
+		//cout << "File save" << endl;
 		out.close();
 	}
 }
@@ -99,7 +102,7 @@ void Inventory::_AddNewItem()
 	system("cls");
 	cout << "How much Items: "; cin >> size;
 	string newItem; size_t newID;
-	if (size >= 1 && size <= maxItems && size != char())
+	if (size >= 1 && size <= maxItems && !cin.fail())
 	{
 		cin.ignore();
 		for (size_t i = 0; i < size; i++)
@@ -112,25 +115,21 @@ void Inventory::_AddNewItem()
 		for (size_t i = 0; i < size; i++)
 		{
 			system("cls");
-			cout << '[' << i << "] ID: "; cin >> newID; cin.ignore();
+			cout << '[' << i << "] ID: "; cin >> newID;
 			itemID.push_back(newID);
 		}
-
+			
 		system("cls");
-		auto j = itemID.begin();
-		for (vector<string>::iterator i = item.begin(); i != item.end(); i++, j++)
-		{
-			cout << "Item: " << *i << 
-				"\nID: " << *j << endl;
-		}
 		item.shrink_to_fit(); itemID.shrink_to_fit(); //clear free bufer
 		_mainFileItems();
+		_LoadFile(mainFile);
 		_SaveADDItems();
 	}
 	else
 	{
-		SetColor(Red, 0); cout << "Error type or size.\Restart the Program!" << endl; SetColor(LightGray, 0);
-		exit(0);
+		SetColor(Red, 0); cout << "Error type or size." << endl;
+		cin.clear(); cin.ignore();
+		SetColor(LightGray, 0); return;
 	}
 }
 
@@ -148,20 +147,22 @@ void Inventory::_DeleteItem()
 	size_t input; cout << "Input index to delete: "; cin >> input;
 	auto _iDel = item.begin();
 	auto _jDel = itemID.begin();
-	if (input >= 0 && input <= item.size())
+	if (input >= 0 && input <= item.size() && !cin.fail())
 	{
 		_SaveDeleteItems(_iDel + input);
 		item.erase(_iDel + input), itemID.erase(_jDel + input);
 		_mainFileItems();
 	}
 	else {
-		SetColor(Red, 0); cout << "Index has < min size or > max size: " << maxItems << endl; SetColor(LightGray, 0);
-		return;
+		SetColor(Red, 0); cout << "Index error or Type" << endl; 
+		cin.clear(); cin.ignore();
+		SetColor(LightGray, 0); return;
 	}
 }
 
-void Inventory::_PrintConsole() const
+void Inventory::_PrintConsole()
 {
+	//loadWindow();
 	system("cls");
 	cout << "Max size Items = " << maxItems << endl;
 	if (!item.empty())
@@ -195,8 +196,21 @@ void Inventory::_FilesPrint()
 	}
 }
 
+//nice load window
+void Inventory::loadWindow()
+{
+	system("cls");
+	for (size_t i = 0; i <= 59; i++)
+	{
+		SetColor(rand() % 15 + 1, 0); cout << char(221) << " "; 
+		Sleep(6);
+	}
+	SetColor(7, 0); Sleep(1000);
+}
+
 void Inventory::_LoadFile(string File)
 {
+	
 	ifstream load;
 	load.open(File);
 	char temp[1024];
